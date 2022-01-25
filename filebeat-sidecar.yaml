@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: filebeat-sidecar
+  labels:
+    app: filebeat-sidecar
+  annotations:
+    configmap.reloader.stakater.com/reload: "filebeat-config"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: filebeat-sidecar
+  template:
+    metadata:
+      name: filebeat-sidecar
+      labels:
+        app: filebeat-sidecar
+    spec:
+      containers:
+        - name: nginx
+          image: nginxdemos/hello:latest
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: nginx-logs
+              mountPath: /var/log/nginx/
+        - name: filebeat
+          image: elastic/filebeat:7.16.2
+          env:
+            - name: TZ
+              value: Asia/Taipei
+          volumeMounts:
+            - name: nginx-logs
+              mountPath: /var/log/nginx/
+            - name: filebeat-config
+              mountPath: /usr/share/filebeat/filebeat.yml
+              subPath: filebeat.yml
+      volumes:
+        - name: nginx-logs
+          emptyDir: {}
+        - name: filebeat-config
+          configMap:
+            name: filebeat-config
+            items:
+              - key: filebeat.yml
+                path: filebeat.yml

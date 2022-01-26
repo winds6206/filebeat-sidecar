@@ -17,6 +17,7 @@ spec:
       labels:
         app: filebeat-sidecar
     spec:
+      restartPolicy: Always
       containers:
         - name: nginx
           image: nginxdemos/hello:latest
